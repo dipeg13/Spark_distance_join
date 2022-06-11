@@ -3,38 +3,38 @@ import math
 from datetime import datetime
 
 
-def boxes(df, dim, coord, die, key):
+def boxes(dataframe, xy, boundaries, stop, key):
     global tree_dict
     global depth
     global partition
-    if die != depth:
-        xmin = coord[0]
-        xmax = coord[1]
-        ymin = coord[2]
-        ymax = coord[3]
-        dim = 'x' if dim == 'y' else 'y'
+    if stop != depth:
+        xmin = boundaries[0]
+        xmax = boundaries[1]
+        ymin = boundaries[2]
+        ymax = boundaries[3]
+        xy = 'x' if xy == 'y' else 'y'
         
-        temp = df.filter( (df.x >=xmin) & (df.x  <=xmax) & (df.y >=ymin) & (df.y  <= ymax))
-        median = temp.stat.approxQuantile(dim, [.5], 0.1)[0]
+        temp = dataframe.filter( (dataframe.x >=xmin) & (dataframe.x  <=xmax) & (dataframe.y >=ymin) & (dataframe.y  <= ymax))
+        median = temp.stat.approxQuantile(xy, [.5], 0.1)[0]
         tree_dict[key] = median
-        if dim == 'x':
+        if xy == 'x':
             box1 = [xmin, median, ymin, ymax]
             box2 = [median, xmax, ymin, ymax]
         else:
             box1 = [xmin, xmax, ymin, median]
             box2 = [xmin, xmax, median, ymax]
-        die +=1
+        stop +=1
         keyLeft = key + '0'
         keyRight = key + '1'
-        boxes(temp, dim, box1, die, keyLeft)
-        boxes(temp, dim, box2, die, keyRight)
+        boxes(temp, xy, box1, die, keyLeft)
+        boxes(temp, xy, box2, die, keyRight)
     else:
         tree_dict[key] = partition
         partition += 1 
 
 
 
-start_stamp = datetime.now()
+tic = datetime.now()
 epsilon = 0.1
 path1 = "hdfs://node1:9000/user/user/blobs1.csv"
 path2 = "hdfs://node1:9000/user/user/blobs2.csv"
@@ -128,14 +128,7 @@ def cellIDB(x,y):
                 if y - distk <= tree_dict[check]:
                     p = check+'0'
                     t.append(p)
-        #idList = tempList
-        """
-        for j in tempList:
-            if len(j)==i+2:
-                idList.append(i)
-        """
         idList = [j for j in t if len(j)==i+2]
-    #print(idList)
     returnList = [tree_dict[i] for i in idList]
     return returnList
 
@@ -145,7 +138,8 @@ datasetB = datasetB.filter((datasetB.x >=xmin-epsilon) & (datasetB.x  <=xmax+eps
 datasetADF = datasetA.withColumn('ID', cellID(col('x'),col('y')))
 datasetBDF = datasetB.withColumn('ID', cellIDB(col('x'),col('y')))
 datasetBDF = datasetBDF.select(datasetBDF.x, datasetBDF.y, explode(datasetBDF.ID)).withColumnRenamed('col', 'ID')
-#datasetBDF.show()
+
+#proper partitioning based on pair-RDDs
 """
 #datasetADF.groupBy('ID').count().show()
 rddA = datasetADF.rdd.map(lambda x: (x[2], (x[0], x[1])))
@@ -168,16 +162,16 @@ dataB = datasetBDF.repartition(nodes, 'ID').persist(StorageLevel.MEMORY_ONLY)
 
 dataA.createOrReplaceTempView("dataA")
 dataB.createOrReplaceTempView("dataB")
-end_stamp = datetime.now()
-temp = (end_stamp - start_stamp).total_seconds()
-print(temp)
+toc = datetime.now()
+preprocessingTime = (toc - tic).total_seconds()
+print(preprocessingTime)
 
 
-start_stamp = datetime.now()
-Distance_joins = spark.sql('select a.x, a.y, b.x, b.y from dataA as a, dataB as b where a.ID=b.ID and power(a.x - b.x,2) + power(a.y - b.y,2) <= {0}'.format(epsilon*epsilon))
+tic = datetime.now()
+Joins = spark.sql('select a.x, a.y, b.x, b.y from dataA as a, dataB as b where a.ID=b.ID and power(a.x - b.x,2) + power(a.y - b.y,2) <= {0}'.format(epsilon*epsilon))
 
-print("Total Joins: ",Distance_joins.count())
-end_stamp = datetime.now()
+print("epsilon-distance Joins:",Joins.count())
+toc = datetime.now()
 
-algorithm = (end_stamp - start_stamp).total_seconds()
-print(algorithm)
+queryTime = (toc - tic).total_seconds()
+print(queryTime)
