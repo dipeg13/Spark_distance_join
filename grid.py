@@ -9,8 +9,8 @@ tic = datetime.now()
 datasetA = spark.read.csv(path1, inferSchema=True)
 datasetB = spark.read.csv(path2, inferSchema=True)
 
-datasetA = datasetA.withColumnRenamed('_c0', 'id').withColumnRenamed('_c1', 'x').withColumnRenamed('_c2', 'y').drop('id')
-datasetB = datasetB.withColumnRenamed('_c0', 'id').withColumnRenamed('_c1', 'x').withColumnRenamed('_c2', 'y').drop('id')
+datasetA = datasetA.withColumnRenamed('_c0', 'x').withColumnRenamed('_c1', 'y')
+datasetB = datasetB.withColumnRenamed('_c0', 'x').withColumnRenamed('_c1', 'y')
 
 xAmin = datasetA.agg({'x':'min'}).collect()[0][0]
 xAmax = datasetA.agg({'x':'max'}).collect()[0][0]
