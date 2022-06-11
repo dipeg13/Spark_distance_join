@@ -2,8 +2,8 @@ from pyspark.sql.functions import *
 import math
 from datetime import datetime
 
-path1 = "hdfs://node1:9000/user/user/normal_1m_a.csv"
-path2 = "hdfs://node1:9000/user/user/normal_1m_b.csv"
+path1 = "hdfs://node1:9000/user/user/blobs1.csv"
+path2 = "hdfs://node1:9000/user/user/blobs2.csv"
 
 tic = datetime.now()
 datasetA = spark.read.csv(path1, inferSchema=True)
