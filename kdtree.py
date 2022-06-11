@@ -26,8 +26,8 @@ def boxes(dataframe, xy, boundaries, stop, key):
         stop +=1
         keyLeft = key + '0'
         keyRight = key + '1'
-        boxes(temp, xy, box1, die, keyLeft)
-        boxes(temp, xy, box2, die, keyRight)
+        boxes(temp, xy, box1, stop, keyLeft)
+        boxes(temp, xy, box2, stop, keyRight)
     else:
         tree_dict[key] = partition
         partition += 1 
