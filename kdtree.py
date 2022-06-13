@@ -36,8 +36,8 @@ def boxes(dataframe, xy, boundaries, stop, key):
 
 tic = datetime.now()
 epsilon = 0.1
-path1 = "hdfs://node1:9000/user/user/blobs1.csv"
-path2 = "hdfs://node1:9000/user/user/blobs2.csv"
+path1 = "hdfs://node1:9000/user/user/un11000000"
+path2 = "hdfs://node1:9000/user/user/un21000000"
 
 
 tempA = spark.read.csv(path1, inferSchema=True).withColumnRenamed('_c0', 'x').withColumnRenamed('_c1', 'y')
