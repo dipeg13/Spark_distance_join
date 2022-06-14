@@ -35,9 +35,9 @@ def boxes(dataframe, xy, boundaries, stop, key):
 
 
 tic = datetime.now()
-epsilon = 0.1
-path1 = "hdfs://node1:9000/user/user/un11000000"
-path2 = "hdfs://node1:9000/user/user/un21000000"
+epsilon = 1
+path1 = "hdfs://node1:9000/user/user/gQ11000000"
+path2 = "hdfs://node1:9000/user/user/gQ21000000"
 
 
 tempA = spark.read.csv(path1, inferSchema=True).withColumnRenamed('_c0', 'x').withColumnRenamed('_c1', 'y')
@@ -67,12 +67,12 @@ ymin = datasetA.agg({"y": "min"}).collect()[0][0]
 coord = [xmin, xmax, ymin, ymax]
 
 from pyspark import StorageLevel
-dfA = datasetA.sample(.05).persist(StorageLevel.MEMORY_ONLY)
+dfA = datasetA.sample(.1).persist(StorageLevel.MEMORY_ONLY)
 
 import math
 
 box_list = []
-depth=9
+depth=7
 
 nodes = 2**depth
 
@@ -115,17 +115,17 @@ def cellIDB(x,y):
         for check in tempList:
             print(check)
             if len(check)%2==1:
-                if x + distk >= tree_dict[check]:
+                if x + epsilon >= tree_dict[check]:
                     p = check+'1'
                     t.append(p)
-                if x - distk <= tree_dict[check]:
+                if x - epsilon <= tree_dict[check]:
                     p = check+'0'
                     t.append(p)
             else:
-                if y + distk >= tree_dict[check]:
+                if y + epsilon >= tree_dict[check]:
                     p = check+'1'
                     t.append(p)
-                if y - distk <= tree_dict[check]:
+                if y - epsilon <= tree_dict[check]:
                     p = check+'0'
                     t.append(p)
         idList = [j for j in t if len(j)==i+2]
@@ -140,7 +140,7 @@ datasetBDF = datasetB.withColumn('ID', cellIDB(col('x'),col('y')))
 datasetBDF = datasetBDF.select(datasetBDF.x, datasetBDF.y, explode(datasetBDF.ID)).withColumnRenamed('col', 'ID')
 
 #proper partitioning based on pair-RDDs
-"""
+
 #datasetADF.groupBy('ID').count().show()
 rddA = datasetADF.rdd.map(lambda x: (x[2], (x[0], x[1])))
 rddB = datasetBDF.rdd.map(lambda x: (x[2], (x[0], x[1])))
@@ -151,14 +151,14 @@ def partitioner(key):
 myRDDA = rddA.partitionBy(nodes, partitioner)
 myRDDB = rddB.partitionBy(nodes, partitioner)
 
-dataA = myRDDA.map(lambda x: (x[1][0], x[1][1], x[0])).toDF(["x", "y", "Box"])
-dataB = myRDDB.map(lambda x: (x[1][0], x[1][1], x[0])).toDF(["x", "y", "Box"])
-"""
-dataA = datasetADF
-dataB = datasetBDF
+dataA = myRDDA.map(lambda x: (x[1][0], x[1][1], x[0])).toDF(["x", "y", "ID"])
+dataB = myRDDB.map(lambda x: (x[1][0], x[1][1], x[0])).toDF(["x", "y", "ID"])
 
-dataA = datasetADF.repartition(nodes, 'ID').persist(StorageLevel.MEMORY_ONLY)
-dataB = datasetBDF.repartition(nodes, 'ID').persist(StorageLevel.MEMORY_ONLY)
+#dataA = datasetADF
+#dataB = datasetBDF
+
+#dataA = datasetADF.repartition(nodes, 'ID').persist(StorageLevel.MEMORY_ONLY)
+#dataB = datasetBDF.repartition(nodes, 'ID').persist(StorageLevel.MEMORY_ONLY)
 
 dataA.createOrReplaceTempView("dataA")
 dataB.createOrReplaceTempView("dataB")
