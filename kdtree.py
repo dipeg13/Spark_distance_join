@@ -35,9 +35,9 @@ def boxes(dataframe, xy, boundaries, stop, key):
 
 
 tic = datetime.now()
-epsilon = 1
-path1 = "hdfs://node1:9000/user/user/gQ11000000"
-path2 = "hdfs://node1:9000/user/user/gQ21000000"
+epsilon = 0.001
+path1 = "hdfs://node1:9000/user/user/blobs11000000"
+path2 = "hdfs://node1:9000/user/user/blobs21000000"
 
 
 tempA = spark.read.csv(path1, inferSchema=True).withColumnRenamed('_c0', 'x').withColumnRenamed('_c1', 'y')
@@ -71,8 +71,7 @@ dfA = datasetA.sample(.1).persist(StorageLevel.MEMORY_ONLY)
 
 import math
 
-box_list = []
-depth=7
+depth=9
 
 nodes = 2**depth
 
