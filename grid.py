@@ -2,8 +2,8 @@ from pyspark.sql.functions import *
 import math
 from datetime import datetime
 
-path1 = "hdfs://node1:9000/user/user/normal_1m_a.csv"
-path2 = "hdfs://node1:9000/user/user/normal_1m_b.csv"
+path1 = "hdfs://node1:9000/user/user/un11000000"
+path2 = "hdfs://node1:9000/user/user/uniform21000000"
 
 tic = datetime.now()
 datasetA = spark.read.csv(path1, inferSchema=True)
@@ -33,7 +33,7 @@ m = 16
 xLength = (xmax - xmin) / n
 yLength = (ymax - ymin) / m
 
-epsilon = 0.1
+epsilon = 0.01
 
 Xs = []
 Ys = []
@@ -86,7 +86,7 @@ dataB = datasetB.withColumn('ID', cellIDB(col('x'), col('y')))
 dataB = dataB.select(dataB.x, dataB.y, explode(dataB.ID)).withColumnRenamed('col', 'ID')
 
 #proper repartitioning with RDDs
-"""
+
 rddA = dataA.rdd.map(lambda x: (x[2], (x[0], x[1])))
 rddB = dataB.rdd.map(lambda x: (x[2], (x[0], x[1])))
 
@@ -98,15 +98,15 @@ myRDDB = rddB.partitionBy(n*m, partitioner)
 
 dataA = myRDDA.map(lambda x: (x[1][0], x[1][1], x[0])).toDF(["x", "y", "ID"])
 dataB = myRDDB.map(lambda x: (x[1][0], x[1][1], x[0])).toDF(["x", "y", "ID"])
-"""
 
+"""
 #DataFrame based repartitioning 
 dataA = dataA.repartition(n*m, 'ID')
 dataB = dataB.repartition(n*m, 'ID')
 
 dataA.createOrReplaceTempView("dataA")
 dataB.createOrReplaceTempView("dataB")
-
+"""
 toc = datetime.now()
 preprocessingTime = (toc-tic).total_seconds()
 print(preprocessingTime)
