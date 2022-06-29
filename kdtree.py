@@ -196,4 +196,4 @@ print(queryTime)
 #Επιλογή για αποθήκευση των αποτελεσμάτων του query
 saveResults = False
 if saveResults:
-    jOINS.write.csv('Results.csv')
+    Joins.write.csv('Results.csv')
