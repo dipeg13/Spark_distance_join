@@ -21,16 +21,16 @@ def nodesCreator(dataframe, xy, boundaries, stop, key):
         median = temp.stat.approxQuantile(xy, [.5], 0.1)[0]
         tree_dict[key] = median
         if xy == 'x':
-            box1 = [xmin, median, ymin, ymax]
-            box2 = [median, xmax, ymin, ymax]
+            LD = [xmin, median, ymin, ymax]
+            RU = [median, xmax, ymin, ymax]
         else:
-            box1 = [xmin, xmax, ymin, median]
-            box2 = [xmin, xmax, median, ymax]
+            LD = [xmin, xmax, ymin, median]
+            RU = [xmin, xmax, median, ymax]
         stop +=1
         keyLeft = key + '0'
         keyRight = key + '1'
-        nodesCreator(temp, xy, box1, stop, keyLeft)
-        nodesCreator(temp, xy, box2, stop, keyRight)
+        nodesCreator(temp, xy, LD, stop, keyLeft)
+        nodesCreator(temp, xy, RU, stop, keyRight)
     else:
         tree_dict[key] = partition
         partition += 1 
