@@ -17,7 +17,6 @@ def nodesCreator(dataframe, xy, boundaries, stop, key):
         ymin = boundaries[2]
         ymax = boundaries[3]
         xy = 'x' if xy == 'y' else 'y'
-        
         temp = dataframe.filter( (dataframe.x >=xmin) & (dataframe.x  <=xmax) & (dataframe.y >=ymin) & (dataframe.y  <= ymax))
         median = temp.stat.approxQuantile(xy, [.5], 0.1)[0]
         tree_dict[key] = median
@@ -30,8 +29,8 @@ def nodesCreator(dataframe, xy, boundaries, stop, key):
         stop +=1
         keyLeft = key + '0'
         keyRight = key + '1'
-        boxes(temp, xy, box1, stop, keyLeft)
-        boxes(temp, xy, box2, stop, keyRight)
+        nodesCreator(temp, xy, box1, stop, keyLeft)
+        nodesCreator(temp, xy, box2, stop, keyRight)
     else:
         tree_dict[key] = partition
         partition += 1 
@@ -42,20 +41,22 @@ tic = datetime.now()
 #Ορισμός της απόστασης epsilon
 epsilon = 0.001
 #Ορισμός του path για το πρώτο αρχείο
-path1 = "hdfs://node1:9000/user/user/blobs11000000"
+#path1 = "hdfs://node1:9000/user/user/blobs11000000"
+path1 = 'hdfs://node1:9000/user/user/blobs11000000'
 #Oρισμός του path για το δεύτερο αρχείο
-path2 = "hdfs://node1:9000/user/user/blobs21000000"
+#path2 = "hdfs://node1:9000/user/user/blobs21000000"
+path2 = 'hdfs://node1:9000/user/user/blobs21000000'
 
 #Ορισμός των dataframes
 tempA = spark.read.csv(path1, inferSchema=True).withColumnRenamed('_c0', 'x').withColumnRenamed('_c1', 'y')
 tempB = spark.read.csv(path2, inferSchema=True).withColumnRenamed('_c0', 'x').withColumnRenamed('_c1', 'y')
 
 #Υπολογισμός των διασπορών των ανά δύο διαφορετικών διαστάσεων
-varAx = tempA.agg({"x": "variance"}).collect()[0][0]
-varAy = tempA.agg({"y": "variance"}).collect()[0][0]
+varAx = tempA.agg({'x': 'variance'}).collect()[0][0]
+varAy = tempA.agg({'y': 'variance'}).collect()[0][0]
 
-varBx = tempB.agg({"x": "variance"}).collect()[0][0]
-varBy = tempB.agg({"y": "variance"}).collect()[0][0]
+varBx = tempB.agg({'x': 'variance'}).collect()[0][0]
+varBy = tempB.agg({'y': 'variance'}).collect()[0][0]
 
 Ahypo = varAx + varAy
 Bhypo = varBx + varBy
@@ -82,7 +83,7 @@ dfA = datasetA.sample(.1).persist(StorageLevel.MEMORY_ONLY)
 import math
 
 #Ορισμός του βάθους του δέντρου depth, το οποίο ορίζει και το πλήθος των partitions ως #{partitions}=2^depth
-depth=9
+depth=6
 
 nodes = 2**depth
 
@@ -91,7 +92,7 @@ key = '0'
 partition = 0
 
 #Εύρεση των στοιχείων του tree_dict μέσω του υποδειγματολημένου συνόλου dfA απ' το datasetA
-nodesCreator(dfA, "y", coord, 0, key)
+nodesCreator(dfA, 'y', coord, 0, key)
 
 #Η udf για την αντιστοίχηση σημείων του Α στο αντίστοιχο partition
 @udf('int')
@@ -171,8 +172,8 @@ dataB = myRDDB.map(lambda x: (x[1][0], x[1][1], x[0])).toDF(["x", "y", "ID"])
 dataA = datasetADF
 dataB = datasetBDF
 
-dataA = datasetADF.repartition(nodes, 'ID').persist(StorageLevel.MEMORY_ONLY)
-dataB = datasetBDF.repartition(nodes, 'ID').persist(StorageLevel.MEMORY_ONLY)
+dataA = datasetADF.repartition(nodes, 'ID')
+dataB = datasetBDF.repartition(nodes, 'ID')
 """
 
 dataA.createOrReplaceTempView("dataA")
