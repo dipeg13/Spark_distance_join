@@ -41,10 +41,8 @@ tic = datetime.now()
 #Ορισμός της απόστασης epsilon
 epsilon = 0.001
 #Ορισμός του path για το πρώτο αρχείο
-#path1 = "hdfs://node1:9000/user/user/blobs11000000"
 path1 = 'hdfs://node1:9000/user/user/blobs11000000'
 #Oρισμός του path για το δεύτερο αρχείο
-#path2 = "hdfs://node1:9000/user/user/blobs21000000"
 path2 = 'hdfs://node1:9000/user/user/blobs21000000'
 
 #Ορισμός των dataframes
