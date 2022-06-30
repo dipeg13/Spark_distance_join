@@ -8,9 +8,9 @@ from datetime import datetime
 #Εκκίνηση χρόνου υπολογισμού του preprocessing
 tic = datetime.now()
 #Ορισμός του path για το πρώτο αρχείο
-path1 = "hdfs://node1:9000/user/user/un11000000"
+path1 = "hdfs://node1:9000/user/user/blobs11000000"
 #Ορισμός του path για το δεύτερο αρχείο
-path2 = "hdfs://node1:9000/user/user/uniform21000000"
+path2 = "hdfs://node1:9000/user/user/blobs21000000"
 
 #Ορισμός των dataframes
 datasetA = spark.read.csv(path1, inferSchema=True).withColumnRenamed('_c0', 'x').withColumnRenamed('_c1', 'y')
@@ -42,7 +42,7 @@ xLength = (xmax - xmin) / n
 yLength = (ymax - ymin) / m
 
 #Ορισμός της απόστασης epsilon
-epsilon = 0.01
+epsilon = 0.001
 
 Xs = []
 Ys = []
@@ -79,13 +79,13 @@ from pyspark.sql.types import *
 def cellIDB(x,y):
     global Xs
     global Ys
-    global distk
+    global epsilon
     global m
     xID = []
     yID = []
     for i in range(len(Xs)):
         for j in range(len(Ys)):
-            if x>= Xs[i][0]-distk and x<=Xs[i][1]+distk and y>=Ys[j][0]-distk and y<=Ys[j][1]+distk:
+            if x>= Xs[i][0]-epsilon and x<=Xs[i][1]+epsilon and y>=Ys[j][0]-epsilon and y<=Ys[j][1]+epsilon:
                 xID.append(i)
                 yID.append(j)
     ids = []
